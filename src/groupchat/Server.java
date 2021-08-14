@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -86,17 +87,31 @@ public class Server {
     }
 
     //读取事件
-    public void readMsg(SelectionKey key){
+    public synchronized void readMsg(SelectionKey key){
         SocketChannel socketChannel = null;
         try{
             socketChannel = (SocketChannel) key.channel();
-            ByteBuffer buffer = ByteBuffer.allocate(20);
+            ByteBuffer buffer = ByteBuffer.allocate(5);
+            String content = "";
             int read = socketChannel.read(buffer);
-            if(read != -1){
-                String content = new String(buffer.array());
+            while (read != 0 && read !=-1){
+                buffer.flip();
+                //System.out.println("非数组打印: ");
+                while (buffer.hasRemaining()){
+                    //System.out.print(buffer.get());
+                    content = content + (char)buffer.get();
+                }
+                buffer.clear();
+                //content = content + new String(buffer.array());
+                //System.out.println("数组打印: "+ Arrays.toString(buffer.array()));
+                read = socketChannel.read(buffer);
+            }
+
+            if(!"test-connceted".equals(content)){
                 System.out.println("用户 -- "+socketChannel.getRemoteAddress()+" 说: "+content);
                 this.sendMsgToOthers("用户 -- "+socketChannel.getRemoteAddress()+"说: "+content,socketChannel);
             }
+
         }catch (Exception e){
             //捕获异常
             e.printStackTrace();
@@ -154,8 +169,6 @@ public class Server {
             SocketChannel channel = (SocketChannel) key.channel();
             //发送消息给其他客户端
             channel.write(ByteBuffer.wrap(content.getBytes()));
-            //这里不能移除元素,因为这不是判断客户端的事件，而是服务器主动发送消息给客户端
-            //iterator.remove();
         }
 
 

@@ -82,7 +82,7 @@ public class Client {
 
         try {
             //client.socketChannel.connect(client.inetSocketAddress);
-            client.socketChannel.finishConnect();
+            client.socketChannel.write(ByteBuffer.wrap("test-connceted".getBytes()));
             return true;
         } catch (IOException e) {
             return false;
@@ -101,11 +101,12 @@ public class Client {
             while (true){
                 try {
                     //如果检测到断开连接，那就试图重新与服务器建立连接
-                    if(Client.isConnected(client)) {
+                    boolean conncected = Client.isConnected(client);
+                    if(!conncected) {
                         System.out.println("断开连接,正在尝试重新连接到服务器...");
                         //首先关闭之前的连接
-                        client.socketChannel.close();
-                        client.socketChannel = null;
+//                        client.socketChannel.close();
+//                        client.socketChannel = null;
                         //重新建立连接
                         client.socketChannel = SocketChannel.open(client.inetSocketAddress);
                         client.socketChannel.configureBlocking(false);
@@ -113,7 +114,7 @@ public class Client {
                         System.out.println("重连成功");
                     }
                     Thread.sleep(2000);
-                    System.out.println("连接状态是 : "+client.socketChannel.finishConnect());
+                    System.out.println("连接状态是 : "+conncected);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -143,7 +144,7 @@ public class Client {
                 Thread.sleep(2000);
                 client.read();
                 //每隔两秒读取一次服务器发送的信息
-                System.out.println("我说: "+sum);
+                System.out.println("我说: "+ ++sum);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
