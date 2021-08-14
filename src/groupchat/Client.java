@@ -25,10 +25,11 @@ public class Client {
 
     SocketChannel socketChannel;
 
+    InetSocketAddress inetSocketAddress = new InetSocketAddress(IP, PORT);
 
     public Client() throws Exception {
         selector = Selector.open();
-        socketChannel = SocketChannel.open(new InetSocketAddress(IP, PORT));
+        socketChannel = SocketChannel.open(inetSocketAddress);
         socketChannel.configureBlocking(false);
         socketChannel.register(selector, SelectionKey.OP_READ);
     }
@@ -76,10 +77,49 @@ public class Client {
 
     }
 
+    //判断服务器的连接状态
+    public static boolean isConnected(Client client){
+
+        try {
+            //client.socketChannel.connect(client.inetSocketAddress);
+            client.socketChannel.finishConnect();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+
+    }
+
 
     public static void main(String[] args) throws Exception {
 
         Client client = new Client();
+
+        //开启一个线程监听服务器，如果服务器上线，就和服务器端重新建立连接
+        new Thread(()->{
+            //服务器发送消息测试
+            while (true){
+                try {
+                    //如果检测到断开连接，那就试图重新与服务器建立连接
+                    if(Client.isConnected(client)) {
+                        System.out.println("断开连接,正在尝试重新连接到服务器...");
+                        //首先关闭之前的连接
+                        client.socketChannel.close();
+                        client.socketChannel = null;
+                        //重新建立连接
+                        client.socketChannel = SocketChannel.open(client.inetSocketAddress);
+                        client.socketChannel.configureBlocking(false);
+                        client.socketChannel.register(client.selector,SelectionKey.OP_READ);
+                        System.out.println("重连成功");
+                    }
+                    Thread.sleep(2000);
+                    System.out.println("连接状态是 : "+client.socketChannel.finishConnect());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }).start();
 
 //        new Thread(){
 //            @Override
@@ -108,9 +148,6 @@ public class Client {
                 e.printStackTrace();
             }
         }
-
-
-
 
 
         //Scanner scanner = new Scanner(System.in);
