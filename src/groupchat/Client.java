@@ -70,7 +70,6 @@ public class Client {
 
             }
 
-
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -90,12 +89,7 @@ public class Client {
 
     }
 
-
-    public static void main(String[] args) throws Exception {
-
-        Client client = new Client();
-
-        //开启一个线程监听服务器，如果服务器上线，就和服务器端重新建立连接
+    public static void reConnect(Client client){
         new Thread(()->{
             //服务器发送消息测试
             while (true){
@@ -107,6 +101,18 @@ public class Client {
                         //首先关闭之前的连接
 //                        client.socketChannel.close();
 //                        client.socketChannel = null;
+
+                        Iterator<SelectionKey> iterator = client.selector.keys().iterator();
+                        while (iterator.hasNext()){
+                            SelectionKey key = iterator.next();
+                            if(key != null){
+                                SocketChannel channel = (SocketChannel) key.channel();
+                                if(channel !=null && channel.equals(client.socketChannel)){
+                                    key.cancel();
+                                    iterator.remove();
+                                }
+                            }
+                        }
                         //重新建立连接
                         client.socketChannel = SocketChannel.open(client.inetSocketAddress);
                         client.socketChannel.configureBlocking(false);
@@ -121,6 +127,16 @@ public class Client {
             }
 
         }).start();
+    }
+
+
+
+    public static void main(String[] args) throws Exception {
+
+        Client client = new Client();
+
+        //开启一个线程监听服务器，如果服务器上线，就和服务器端重新建立连接
+        reConnect(client);
 
 //        new Thread(){
 //            @Override

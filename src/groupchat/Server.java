@@ -152,7 +152,6 @@ public class Server {
             //iterator.remove();
         }
 
-
     }
 
 
@@ -174,11 +173,7 @@ public class Server {
 
     }
 
-
-    public static void main(String[] args) throws Exception {
-
-        Server server = new Server();
-
+    public static void sendToOthersThread(Server server){
         new Thread(()->{
             //服务器发送消息测试
             while (true){
@@ -192,6 +187,12 @@ public class Server {
             }
 
         }).start();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        Server server = new Server();
+        sendToOthersThread(server);
 
         server.listen();
 
