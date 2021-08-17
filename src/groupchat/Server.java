@@ -193,7 +193,7 @@ public class Server {
 
         Server server = new Server();
         sendToOthersThread(server);
-
+        
         server.listen();
 
     }
